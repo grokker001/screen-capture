@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import React, { Component } from 'react';
 import './index.css';
 import Video from 'twilio-video'
@@ -15,7 +17,9 @@ class ScreenCapture extends Component {
       roomName: null,
       isJoined: false,
       isInProgress: false,
-      identity: null
+      identity: null,
+      room: null,
+      screenTrack: null
     }
   }
 
@@ -36,7 +40,7 @@ class ScreenCapture extends Component {
   
 
   getUserScreen = () => {
-    var extensionId = 'phpejjjolljdehnkjilkkdgeohngnkam';
+    var extensionId = 'bjankanifmenakebailckaheilfggkfc';
     // if (!canScreenShare()) {
     //   return;
     // }
@@ -45,7 +49,7 @@ class ScreenCapture extends Component {
         const request = {
           sources: ['screen']
         };
-        window.chrome.runtime.sendMessage(extensionId, request, response => {
+        chrome.runtime.sendMessage(extensionId, request, response => {
           if (response && response.type === 'success') {
             resolve({ streamId: response.streamId });
           } else {
@@ -84,7 +88,8 @@ class ScreenCapture extends Component {
     this.log("Joining room '" + roomName + "'...");
     var connectOptions = {
       name: roomName,
-      logLevel: 'debug'
+      logLevel: 'debug',
+      tracks: []
     };
 
     // Join the Room with the token from the server and the
@@ -101,15 +106,15 @@ class ScreenCapture extends Component {
   }
 
   roomJoined = room => {
-    window.room = room;
+    //window.room = room;
   
     this.log("Joined as '" + this.state.identity.identity + "'");
-    this.setState({isJoined: true})
+    this.setState({isJoined: true, room})
 
-    var previewContainer = document.getElementById('local-media');
-    if (!previewContainer.querySelector('video')) {
-      this.attachParticipantTracks(room.localParticipant, previewContainer);
-    }
+    // var previewContainer = document.getElementById('local-media');
+    // if (!previewContainer.querySelector('video')) {
+    //   this.attachParticipantTracks(room.localParticipant, previewContainer);
+    // }
   
     // Attach the Tracks of the Room's Participants.
     room.participants.forEach(participant => {
@@ -155,8 +160,8 @@ class ScreenCapture extends Component {
   shareScreen = () => {
     this.getUserScreen().then( stream => {
       let screenTrack = stream.getVideoTracks()[0];
-      window.room.localParticipant.publishTrack(screenTrack);
-      this.setState({isInProgress: true})
+      this.state.room.localParticipant.publishTrack(screenTrack);
+      this.setState({isInProgress: true, screenTrack})
     })
   }
   
@@ -184,9 +189,20 @@ class ScreenCapture extends Component {
   }
 
   // Detach the Participant's Tracks from the DOM.
-  detachParticipantTracks(participant) {
-    var tracks = Array.from(participant.tracks.values());
+  detachParticipantTracks = participant => {
+    let tracks = Array.from(participant.tracks.values());
     this.detachTracks(tracks);
+  }
+
+  unshareScreen = () => {
+    this.state.room.localParticipant.unpublishTrack(this.state.screenTrack);
+    this.setState({isInProgress: false, screenTrack: null})
+  }
+
+  leaveRoom = () => {
+    this.log('Leaving room...');
+    this.state.room.disconnect();
+    this.setState({isJoined: false, room: null})
   }
 
   render() {
@@ -194,7 +210,7 @@ class ScreenCapture extends Component {
       <div>
           <div id="remote-media"></div>
           <div id="controls">
-            <LocalVideo />
+            {/* <LocalVideo /> */}
             {this.state.showIdentityControls && <IdentityControl setIdentity={ this.setIdentity }/>}
             {this.state.showRoomControls && <RoomControl 
               setIdentityObj={this.setIdentityObj} 
@@ -204,7 +220,10 @@ class ScreenCapture extends Component {
               identity={ this.state.identity } 
               userName = {this.state.userName}
               logConsole={ this.log }
-              shareScreen = {this.shareScreen}/>}
+              shareScreen = {this.shareScreen} 
+              unshareScreen = {this.unshareScreen}
+              leaveRoom = {this.leaveRoom}
+              />}
             <div id="log"></div>
           </div>
       </div>

@@ -9,7 +9,7 @@ class RoomControl extends Component {
   }
 
   componentDidMount() {
-    $.getJSON('http://192.168.0.24:3001/token?identity=' + encodeURIComponent(this.props.userName), data => {
+    $.getJSON('http://192.168.0.14:3001/token?identity=' + encodeURIComponent(this.props.userName), data => {
       let identity = data.identity;
       this.props.logConsole("Ready and connected as '" + identity + "'...");
       this.props.setIdentityObj(data);
@@ -29,6 +29,14 @@ class RoomControl extends Component {
     this.props.shareScreen()
   }
 
+  leaveRoom = e => {
+    this.props.leaveRoom()
+  }
+
+  unshareScreen = e=> {
+    this.props.unshareScreen()
+  }
+
   render() {
     if (!this.props.identity) 
       return (
@@ -42,9 +50,9 @@ class RoomControl extends Component {
           <p className="instructions">Room Name:</p>
           <input id="room-name" type="text" placeholder="Enter a room name" onChange={this.handleChange}/>
           {!this.props.isJoined && <button id="button-join" onClick={this.setRoomName}>Join Room</button> }
-          {this.props.isJoined && <button id="button-leave">Leave Room</button> }
+          {this.props.isJoined && <button id="button-leave" onClick={this.leaveRoom}>Leave Room</button> }
           {!this.props.isInProgress && <button id="button-share-screen" onClick={this.shareScreen}>Share screen</button> }
-          {this.props.isInProgress && <button id="button-unshare-screen">Unshare screen</button> }
+          {this.props.isInProgress && <button id="button-unshare-screen" onClick={this.unshareScreen}>Unshare screen</button> }
         </div>
     )
   }
