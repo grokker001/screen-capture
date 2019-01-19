@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "jquery": "^2.1.4",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
-    "react-scripts": "2.1.3"
+    "react-scripts": "2.1.3",
+    "twilio": "^3.27.1",
+    "twilio-video": "^1.15.0"
   },
   "scripts": {
     "start": "react-scripts start",
